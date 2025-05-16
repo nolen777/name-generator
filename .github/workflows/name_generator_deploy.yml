@@ -1,0 +1,35 @@
+name: Name Generator Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: "packages" 
+  pull_request:
+    paths: "packages" 
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Run tests
+        run: bazel test --build_event_json_file=test.json //src/main/go/net/eagle0/web_functions/name-generator/...
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+         token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Deploy
+        if: success()
+        run: |
+          # Deploy the name generator
+          cd src/main/go/net/eagle0/web_functions/
+          doctl serverless install
+          doctl serverless connect eagle0
+          doctl serverless deploy name-generator
