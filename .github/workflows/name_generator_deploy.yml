@@ -3,9 +3,9 @@ name: Name Generator Deploy
 on:
   push:
     branches: [ "main" ]
-    paths: "packages" 
   pull_request:
-    paths: "packages" 
+    paths: 
+      - "packages/**" 
 
 permissions:
   contents: read
