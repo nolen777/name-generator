@@ -20,7 +20,9 @@ jobs:
         with:
           lfs: false
       - name: Run tests
-        run: bazel test --build_event_json_file=test.json //src/main/go/net/eagle0/web_functions/name-generator/...
+        run: |
+          cd packages/eagle0/names
+          go test github.com/nolen777/name-generator/packages/eagle0/names/...
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
@@ -29,7 +31,7 @@ jobs:
         if: success()
         run: |
           # Deploy the name generator
-          cd src/main/go/net/eagle0/web_functions/
+          cd ../../..
           doctl serverless install
           doctl serverless connect eagle0
           doctl serverless deploy name-generator
