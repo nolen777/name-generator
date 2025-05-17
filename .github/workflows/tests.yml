@@ -1,7 +1,7 @@
 name: Name Generator Deploy
 
 on:
-  pull-request
+  push
 
 permissions:
   contents: read
