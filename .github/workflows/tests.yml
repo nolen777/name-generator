@@ -1,4 +1,4 @@
-name: Name Generator Deploy
+name: Tests
 
 on:
   push
