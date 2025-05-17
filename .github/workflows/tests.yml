@@ -1,8 +1,7 @@
 name: Name Generator Deploy
 
 on:
-  push:
-    branches: [ "main" ]
+  push
 
 permissions:
   contents: read
@@ -24,15 +23,3 @@ jobs:
         run: |
           cd packages/eagle0/names
           go test github.com/nolen777/name-generator/packages/eagle0/names/...
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-         token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-      - name: Deploy
-        if: success()
-        run: |
-          # Deploy the name generator
-          cd ../../..
-          doctl serverless install
-          doctl serverless connect eagle0
-          doctl serverless deploy .
