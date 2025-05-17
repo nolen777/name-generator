@@ -1,8 +1,7 @@
 name: Name Generator Deploy
 
 on:
-  pull_request:
-    types: [opened, reopened, edited]
+  pull-request
 
 permissions:
   contents: read

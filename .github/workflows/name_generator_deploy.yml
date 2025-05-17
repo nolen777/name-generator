@@ -3,8 +3,6 @@ name: Name Generator Deploy
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    types: [opened, reopened, edited]
 
 permissions:
   contents: read
