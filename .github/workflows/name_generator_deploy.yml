@@ -40,4 +40,4 @@ jobs:
           cd ../../..
           doctl serverless install
           doctl serverless connect eagle0
-          doctl serverless deploy name-generator
+          doctl serverless deploy .
