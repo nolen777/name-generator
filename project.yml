@@ -18,3 +18,14 @@ packages:
             DIGITALOCEAN_SECRET_KEY: "${DIGITALOCEAN_SECRET_KEY}"
           annotations: {}
           limits: {}
+        - name: update-words
+          binary: false
+          main: "UpdateWords"
+          runtime: go:1.20
+          web: true
+          parameters: {}
+          environment:
+            DIGITALOCEAN_ACCESS_KEY_ID: "${DIGITALOCEAN_ACCESS_KEY_ID}"
+            DIGITALOCEAN_SECRET_KEY: "${DIGITALOCEAN_SECRET_KEY}"
+          annotations: {}
+          limits: {}
