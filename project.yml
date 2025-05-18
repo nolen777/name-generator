@@ -12,7 +12,6 @@ packages:
           main: "Names"
           runtime: go:1.20
           web: true
-          webSecure: false
           parameters: {}
           environment: {}
           annotations: {}
