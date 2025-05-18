@@ -5,22 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nolen777/name-generator/packages/eagle0/names/parser"
+	"github.com/nolen777/name-generator/packages/eagle0/names/spaces_fetcher"
 	"github.com/nolen777/name-generator/packages/eagle0/names/token"
 	"math/rand"
 	"strings"
 	"time"
 )
-import (
-	_ "embed"
-)
 
-//go:embed nameConstruction.txt
-var rawStringConstruction string
-
-var stringConstructionToken string = strings.ReplaceAll(rawStringConstruction, "\n", "")
-
-//go:embed names.tsv
-var namesTsv string
+var stringConstructionToken string = fetchStringConstructionToken()
 
 type headers struct {
 	Accept string `json:"accept"`
@@ -57,6 +49,8 @@ type Response struct {
 	Headers    ResponseHeaders `json:"headers"`
 }
 
+var femaleCtx, maleCtx, otherCtx = generateContexts()
+
 func Names(ctx context.Context, event Event) Response {
 	info := event.Http
 	headers := info.Headers
@@ -77,8 +71,6 @@ func Names(ctx context.Context, event Event) Response {
 			},
 		}
 	}
-
-	femaleCtx, maleCtx, otherCtx := generateContexts()
 
 	nameResponses := []NameResponse{}
 	for _, request := range requests {
@@ -180,6 +172,12 @@ func generateContexts() (token.StringConstructionContext, token.StringConstructi
 	maleNameWords := map[string][]string{}
 	unfilteredNameWords := map[string][]string{}
 
+	namesTsvBytes, err := spaces_fetcher.GetFile("names.tsv")
+	if err != nil {
+		panic(err)
+	}
+	namesTsv := string(namesTsvBytes)
+
 	nameLines := strings.Split(namesTsv, "\n")
 	nameTitles := strings.Split(nameLines[0], "\t")
 	titleBuckets := make([]string, len(nameTitles))
@@ -231,4 +229,12 @@ func generateContexts() (token.StringConstructionContext, token.StringConstructi
 	}
 
 	return femaleCtx, maleCtx, otherCtx
+}
+
+func fetchStringConstructionToken() string {
+	rawStringConstructionToken, err := spaces_fetcher.GetFile("nameConstruction.txt")
+	if err != nil {
+		panic(err)
+	}
+	return strings.ReplaceAll(string(rawStringConstructionToken), "\n", "")
 }
