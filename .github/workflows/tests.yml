@@ -20,6 +20,9 @@ jobs:
         with:
           go-version: '1.20'
       - name: Run tests
+        env:
+          DIGITALOCEAN_ACCESS_KEY_ID: ${{ secrets.DIGITALOCEAN_ACCESS_KEY_ID }}
+          DIGITALOCEAN_SECRET_KEY: ${{ secrets.DIGITALOCEAN_SECRET_KEY }}
         run: |
           cd packages/eagle0/names
           go test github.com/nolen777/name-generator/packages/eagle0/names/...
