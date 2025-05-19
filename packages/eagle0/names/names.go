@@ -178,7 +178,7 @@ func generateContexts() (token.StringConstructionContext, token.StringConstructi
 	}
 	namesTsv := string(namesTsvBytes)
 
-	nameLines := strings.Split(namesTsv, "\n")
+	nameLines := strings.Split(namesTsv, "\r\n")
 	nameTitles := strings.Split(nameLines[0], "\t")
 	titleBuckets := make([]string, len(nameTitles))
 	for i := range nameTitles {
@@ -236,5 +236,7 @@ func fetchStringConstructionToken() string {
 	if err != nil {
 		panic(err)
 	}
-	return strings.ReplaceAll(string(rawStringConstructionToken), "\n", "")
+	removeCRs := strings.ReplaceAll(string(rawStringConstructionToken), "\r", "")
+	removeNLs := strings.ReplaceAll(removeCRs, "\n", "")
+	return removeNLs
 }
