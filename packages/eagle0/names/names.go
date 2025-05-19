@@ -197,9 +197,6 @@ func generateContexts() (token.StringConstructionContext, token.StringConstructi
 			if entry == "" {
 				continue
 			}
-			if strings.Contains(entry, "\r") {
-				fmt.Printf("Here it is")
-			}
 			title := nameTitles[i]
 			bucket := titleBuckets[i]
 
