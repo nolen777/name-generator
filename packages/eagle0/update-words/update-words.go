@@ -86,7 +86,7 @@ func condensedTsv(tsv string) string {
 		}
 		values := strings.Split(line, "\t")
 		for i, h := range headers {
-			namesMap[h][values[i]] = true
+			namesMap[h][strings.TrimSpace(values[i])] = true
 		}
 	}
 

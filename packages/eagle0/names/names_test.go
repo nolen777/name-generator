@@ -74,3 +74,18 @@ func TestNames_acceptJson(t *testing.T) {
 		t.Errorf("Expected 20 names, got %d", len(jb.Names))
 	}
 }
+
+func TestNames_noSpaceBeforeComma(t *testing.T) {
+	event := Event{
+		Http: httpInfo{Headers: headers{
+			Accept: "text/html",
+		}},
+	}
+
+	ctx := context.WithValue(context.Background(), "function_version", "1.0")
+	response := Names(ctx, event).Body
+
+	if strings.Contains(response, " ,") {
+		t.Errorf("Expected no space before comma in HTML response")
+	}
+}
