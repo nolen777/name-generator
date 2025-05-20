@@ -9,10 +9,9 @@ import (
 	"github.com/nolen777/name-generator/packages/eagle0/names/token"
 	"math/rand"
 	"strings"
+	"sync"
 	"time"
 )
-
-var stringConstructionToken string = fetchStringConstructionToken()
 
 type headers struct {
 	Accept string `json:"accept"`
@@ -49,7 +48,35 @@ type Response struct {
 	Headers    ResponseHeaders `json:"headers"`
 }
 
-var femaleCtx, maleCtx, otherCtx = generateContexts()
+var femaleCtx token.StringConstructionContext
+var maleCtx token.StringConstructionContext
+var otherCtx token.StringConstructionContext
+
+var stringConstructionToken token.StringConstructionToken
+
+func init() {
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		femaleCtx, maleCtx, otherCtx = generateContexts()
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		stringConstructionString := fetchStringConstructionToken()
+		tok, err := parser.ParseFrom(stringConstructionString)
+		if err != nil {
+			fmt.Println("Error parsing string construction token: ", err)
+			panic(err)
+		}
+		stringConstructionToken = tok
+	}()
+
+	wg.Wait()
+}
 
 func Names(ctx context.Context, event Event) Response {
 	info := event.Http
@@ -60,18 +87,6 @@ func Names(ctx context.Context, event Event) Response {
 	// Get the requests
 	requests := generateRequests(event, rGen)
 
-	tok, err := parser.ParseFrom(stringConstructionToken)
-	if err != nil {
-		fmt.Println("Error parsing string construction token: ", err)
-		return Response{
-			Body:       "<html><h1>Error parsing string construction token</h1></html>",
-			StatusCode: "500",
-			Headers: ResponseHeaders{
-				ContentType: "text/html",
-			},
-		}
-	}
-
 	nameResponses := []NameResponse{}
 	for _, request := range requests {
 		scCtx := otherCtx
@@ -80,7 +95,7 @@ func Names(ctx context.Context, event Event) Response {
 		} else if request.Gender == "male" {
 			scCtx = maleCtx
 		}
-		name, err := tok.Next(rGen, scCtx)
+		name, err := stringConstructionToken.Next(rGen, scCtx)
 		if err != nil {
 			fmt.Println("Error generating name: ", err)
 			return Response{
