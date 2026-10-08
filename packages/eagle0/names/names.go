@@ -7,6 +7,7 @@ import (
 	"github.com/nolen777/name-generator/packages/eagle0/names/parser"
 	"github.com/nolen777/name-generator/packages/eagle0/names/spaces_fetcher"
 	"github.com/nolen777/name-generator/packages/eagle0/names/token"
+	"html"
 	"math/rand"
 	"strings"
 	"sync"
@@ -24,8 +25,11 @@ type httpInfo struct {
 }
 
 type NameRequest struct {
-	Id     string `json:"id"`
-	Gender string `json:"gender"`
+	Id            string `json:"id"`
+	Gender        string `json:"gender"`
+	Kind          string `json:"kind,omitempty"`
+	BattalionType string `json:"battalionType,omitempty"`
+	ProvinceName  string `json:"provinceName,omitempty"`
 }
 
 type Event struct {
@@ -54,7 +58,9 @@ var otherCtx token.StringConstructionContext
 
 var stringConstructionToken token.StringConstructionToken
 
-func init() {
+var initializeOnce sync.Once
+
+func initialize() {
 	var wg sync.WaitGroup
 
 	wg.Add(1)
@@ -76,6 +82,7 @@ func init() {
 	}()
 
 	wg.Wait()
+	initializeBattalionTokens()
 }
 
 func Names(ctx context.Context, event Event) Response {
@@ -87,6 +94,13 @@ func Names(ctx context.Context, event Event) Response {
 	// Get the requests
 	requests := generateRequests(event, rGen)
 
+	for _, request := range requests {
+		if err := validateRequest(request); err != nil {
+			return requestError(err, headers.Accept)
+		}
+	}
+	initializeOnce.Do(initialize)
+
 	nameResponses := []NameResponse{}
 	for _, request := range requests {
 		scCtx := otherCtx
@@ -95,7 +109,13 @@ func Names(ctx context.Context, event Event) Response {
 		} else if request.Gender == "male" {
 			scCtx = maleCtx
 		}
-		name, err := stringConstructionToken.Next(rGen, scCtx)
+		constructionToken := stringConstructionToken
+		if request.Kind == "battalion" {
+			constructionToken = battalionTokens[request.BattalionType]
+			scCtx = otherCtx
+			scCtx.LiteralSubstitutions = map[string]string{"PLACE": request.ProvinceName}
+		}
+		name, err := constructionToken.Next(rGen, scCtx)
 		if err != nil {
 			fmt.Println("Error generating name: ", err)
 			return Response{
@@ -150,7 +170,7 @@ func jsonSuccess(nameResponses []NameResponse) Response {
 func htmlSuccess(nameResponses []NameResponse) Response {
 	names := make([]string, len(nameResponses))
 	for i, nameResponse := range nameResponses {
-		names[i] = nameResponse.Name
+		names[i] = html.EscapeString(nameResponse.Name)
 	}
 	return Response{
 		Body:       "<html>\r\n" + strings.Join(names, "\r\n<p>\r\n") + "</html>\r\n",
@@ -183,17 +203,19 @@ func generateRequests(event Event, rGen *rand.Rand) []NameRequest {
 }
 
 func generateContexts() (token.StringConstructionContext, token.StringConstructionContext, token.StringConstructionContext) {
-	femaleNameWords := map[string][]string{}
-	maleNameWords := map[string][]string{}
-	unfilteredNameWords := map[string][]string{}
-
 	namesTsvBytes, err := spaces_fetcher.GetFile("names.tsv")
 	if err != nil {
 		panic(err)
 	}
-	namesTsv := string(namesTsvBytes)
+	return contextsFromTSV(string(namesTsvBytes))
+}
 
-	nameLines := strings.Split(namesTsv, "\r\n")
+func contextsFromTSV(namesTsv string) (token.StringConstructionContext, token.StringConstructionContext, token.StringConstructionContext) {
+	femaleNameWords := map[string][]string{}
+	maleNameWords := map[string][]string{}
+	unfilteredNameWords := map[string][]string{}
+
+	nameLines := strings.Split(strings.ReplaceAll(namesTsv, "\r\n", "\n"), "\n")
 	nameTitles := strings.Split(nameLines[0], "\t")
 	titleBuckets := make([]string, len(nameTitles))
 	for i := range nameTitles {
