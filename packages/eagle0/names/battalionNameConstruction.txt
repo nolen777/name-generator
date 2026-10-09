@@ -1,0 +1,6 @@
+-
+[0.2 { 0.7 %200 " " } @PLACE " ", 0.2 { 0.1 %200 " " } [0.75 $name, 0.25 $surname] "'s ", 0.2 { 0.1 %200 " " } $adjective " "]
+{0.15 $adjective " "}
+{0.25 $verb " "}
+[0.75 $BATTALION_NAME, 0.25 $BATTALION_ADJECTIVE " " [0.8 $pluralnoun, 0.2 $noun]]
++
