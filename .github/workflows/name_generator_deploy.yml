@@ -33,9 +33,12 @@ jobs:
          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       - name: Deploy
         if: success()
+        env:
+          DIGITALOCEAN_ACCESS_KEY_ID: ${{ secrets.DIGITALOCEAN_ACCESS_KEY_ID }}
+          DIGITALOCEAN_SECRET_KEY: ${{ secrets.DIGITALOCEAN_SECRET_KEY }}
         run: |
-          # Deploy the name generator
-          cd ../../..
+          # Install on fresh runners and upgrade stale support on reused runners.
           doctl serverless install
+          doctl serverless upgrade
           doctl serverless connect eagle0
           doctl serverless deploy .
