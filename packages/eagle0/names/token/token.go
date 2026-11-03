@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -151,6 +152,8 @@ type TitleCaseToken struct {
 	Base StringConstructionToken
 }
 
+var ordinalWord = regexp.MustCompile(`^[0-9]+(?:st|nd|rd|th)$`)
+
 func (token TitleCaseToken) Next(rand TokenRandomSource, ctx StringConstructionContext) (string, error) {
 	caser := cases.Title(language.AmericanEnglish, cases.NoLower)
 	str, err := token.Base.Next(rand, ctx)
@@ -162,7 +165,9 @@ func (token TitleCaseToken) Next(rand TokenRandomSource, ctx StringConstructionC
 	newWords := make([]string, len(words))
 
 	for i, word := range words {
-		if i == 0 || i == len(words)-1 {
+		if ordinalWord.MatchString(word) {
+			newWords[i] = word
+		} else if i == 0 || i == len(words)-1 {
 			newWords[i] = caser.String(word)
 		} else if _, ok := uncapitalizedWords[word]; ok {
 			newWords[i] = strings.ToLower(word)

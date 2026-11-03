@@ -230,6 +230,21 @@ func TestTitleCaseToken_uncapitalizedWords(t *testing.T) {
 	}
 }
 
+func TestTitleCaseToken_preservesOrdinals(t *testing.T) {
+	token := TitleCaseToken{
+		Base: LiteralToken{Literal: "92nd infantry and 101st cavalry, 103rd and 97th"},
+	}
+
+	result, err := token.Next(nil, emptyContext)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const expected = "92nd Infantry and 101st Cavalry, 103rd and 97th"
+	if result != expected {
+		t.Errorf("expected %q, got %q", expected, result)
+	}
+}
+
 func TestTitleCaseToken_preserveExistingCapitals(t *testing.T) {
 	token := TitleCaseToken{
 		Base: LiteralToken{Literal: "hello wOrLD"},
