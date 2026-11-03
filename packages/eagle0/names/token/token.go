@@ -2,10 +2,10 @@ package token
 
 import (
 	"fmt"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"strconv"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 type StringConstructionContext struct {
@@ -152,23 +152,24 @@ type TitleCaseToken struct {
 }
 
 func (token TitleCaseToken) Next(rand TokenRandomSource, ctx StringConstructionContext) (string, error) {
-	caser := cases.Title(language.AmericanEnglish, cases.NoLower)
 	str, err := token.Base.Next(rand, ctx)
 	if err != nil {
 		return "", err
 	}
 
 	words := strings.Split(str, " ")
-	newWords := make([]string, len(words))
 
 	for i, word := range words {
-		if i == 0 || i == len(words)-1 {
-			newWords[i] = caser.String(word)
-		} else if _, ok := uncapitalizedWords[word]; ok {
-			newWords[i] = strings.ToLower(word)
-		} else {
-			newWords[i] = caser.String(word)
+		if word == "" {
+			continue
+		}
+		if i > 0 && i < len(words)-1 && uncapitalizedWords[word] {
+			continue
+		}
+		first, size := utf8.DecodeRuneInString(word)
+		if upper := unicode.ToUpper(first); upper != first {
+			words[i] = string(upper) + word[size:]
 		}
 	}
-	return strings.Join(newWords, " "), nil
+	return strings.Join(words, " "), nil
 }
